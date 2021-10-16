@@ -1,0 +1,84 @@
+from functools import partial
+import numpy as np
+import scipy.integrate
+import scipy
+import matplotlib.pyplot as plt
+import matplotlib.patches as mpatches 
+%matplotlib inline
+
+scenarios = [
+     {"a":0.02, "b":0.2,  "I":0},
+     {"a":0.02, "b":0.2, "I":-65},
+     {"a":0.02, "b":0.2,  "I":-87}
+]
+time_span = np.linspace(0, 10, num=15000)
+
+def H_H(x, t, a, b, I):
+    
+    pass
+
+#Definición del modelo
+
+def H_H(x, t, a, b, I):
+    
+    return np.array([0.04*(x[0]**2) + 5*(x[0]) +140 - x[1] + I, 
+                     ( (x[0]*a*b) - a*x[1] )])
+                     
+ def get_displacement(param, dmax=0.01,time_span=np.linspace(1,10, 30), number=5):
+
+    ic = scipy.integrate.odeint(partial(H_H, **param),
+                                                      y0=[-1,0],
+                                                      t= np.linspace(0,999, 1000))[0]
+     
+    traj = [] 
+    for displacement in np.linspace(0,dmax, number):
+        traj.append(scipy.integrate.odeint(partial(H_H, **param),
+                                                      y0=ic+np.array([displacement,0]),
+                                                      t=time_span))
+    return traj
+    
+   trajectories = {} #trayectorias 
+for i,param in enumerate(scenarios):
+    trajectories[i] = get_displacement(param, number=10, time_span=time_span, dmax=0.5)
+    
+    def plot_isocline(ax, a, b, I, color='k', style='--', opacity=.5, vmin=-120,vmax=0,steps=7):
+    v = np.linspace(vmin,vmax,20)
+    ax.plot(v, 0.04*(v**2)+(5*v)+140, style, color='b', alpha=opacity)
+    ax.plot(v, 0.04*(v**2)+(5*v)+140 + I, style, color=color, alpha=opacity)
+    ax.plot(v, b*v, style, color=color, alpha=opacity)
+    
+    #NULLCLINE
+    
+    fig, ax = plt.subplots(1, len(scenarios), figsize=(18, 6))
+for i, sc in enumerate(scenarios):
+    plot_isocline(ax[i], **sc)
+    ax[i].set(xlabel='v', ylabel='u',
+              title='{}'.format(sc))
+    
+    #PHASES
+    
+    def plot_vector_field(ax, param, xrange, yrange, steps=500):
+    
+    x = np.linspace(xrange[0], xrange[1], steps)
+    y = np.linspace(yrange[0], yrange[1], steps)
+    X,Y = np.meshgrid(x,y)
+    
+    dx,dy = H_H([X,Y],0,**param)   
+    
+    
+    ax.streamplot(X,Y,dx, dy, color=(0,0.5,1,.1))
+    
+    ax.set(xlim=(xrange[0], xrange[1]), ylim=(yrange[0], yrange[1]))
+    
+    #PLOT PHASES
+    
+    fig, ax = plt.subplots(1, 3, figsize=(20, 6))
+for i, sc in enumerate(scenarios):
+    xrange = (-120, 0)
+    yrange = (-120,100)
+    plot_vector_field(ax[i], sc, xrange, yrange)
+    plot_isocline(ax[i], **sc)
+    ax[i].set(xlabel='v', ylabel='u',
+          title='{}'.format(sc))
+    
+    
