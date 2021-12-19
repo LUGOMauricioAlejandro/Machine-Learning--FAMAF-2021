@@ -1,0 +1,19 @@
+class Autoencoder(nn.Module):
+    def __init__(self):
+        super(Autoencoder, self).__init__()
+        self.encoder = Encoder() # call to class Encoder / llama a la clase autoncoder
+        self.decoder = Decoder() # call to class Decoder / llama a la clase Decoder
+    
+    def forward(self, x):    #Forward propagation / propagación hacia adelante
+        latent = self.encoder(x) # latent / capa de latencia 
+        x_recon = self.decoder(latent)
+        return x_recon
+
+    
+autoencoder = Autoencoder() # Save / guarda
+
+device = torch.device("cuda:0" if use_gpu and torch.cuda.is_available() else "cpu")
+autoencoder = autoencoder.to(device) # GPU - CPU
+
+num_params = sum(p.numel() for p in autoencoder.parameters() if p.requires_grad)
+print('Number of parameters: %d' % num_params) # Summary number of parameters / información de estuctura 
